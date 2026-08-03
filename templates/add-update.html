@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neo Phonebook Form</title>
+  <style>
+    :root {
+      --bg: #060816;
+      --panel: rgba(10, 18, 36, 0.92);
+      --text: #f3f7ff;
+      --muted: #8ea2c4;
+      --accent: #7c5cff;
+      --accent-2: #21d4fd;
+      --danger: #ff5d8f;
+      --border: rgba(255, 255, 255, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top right, rgba(33, 212, 253, 0.15), transparent 35%), linear-gradient(135deg, #060816 0%, #101c34 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(640px, 100%);
+      padding: 32px;
+      border-radius: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(33, 212, 253, 0.16);
+      color: var(--accent-2);
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    h1, h2 { margin: 0 0 12px; }
+    .subtitle { color: var(--muted); margin-bottom: 20px; }
+
+    form { display: grid; gap: 14px; }
+    input {
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      font-size: 1rem;
+    }
+
+    input:focus { outline: 2px solid rgba(124, 92, 255, 0.4); border-color: var(--accent); }
+
+    button {
+      padding: 14px 18px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
+
+    .warning { color: var(--danger); font-weight: 700; }
+    .sectionnote { color: var(--accent-2); font-weight: 700; }
+    .footnote { margin-top: 16px; color: var(--muted); line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">Neo Form</div>
+    <h1>Phonebook Application</h1>
+    <h2>Welcome to {{developer_name}}'s space</h2>
+    <p class="subtitle">Enter the details below to {{action_name}} a contact.</p>
+
+    <form action="#" method="post">
+      <label for="name"><b>Name:</b></label>
+      <input placeholder="Full Name" type="text" name="username" id="name" required>
+      <label for="number"><b>Phone Number:</b></label>
+      <input placeholder="1234567890" name="phonenumber" id="number" required />
+      <button type="submit">{{ action_name.title() }}</button>
+      {% if not_valid %}
+      <p class="warning"><b>{{ message }}</b></p>
+      {% endif %}
+      {% if show_result %}
+      <p class="sectionnote">{{ result }}</p>
+      {% endif %}
+    </form>
+
+    <p class="footnote"><i>This app is connected directly to MySQL for reliable record updates.</i></p>
+  </div>
+</body>
+</html>

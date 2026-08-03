@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Neo Phonebook</title>
+  <style>
+    :root {
+      --bg: #060816;
+      --panel: rgba(10, 18, 36, 0.92);
+      --text: #f3f7ff;
+      --muted: #8ea2c4;
+      --accent: #7c5cff;
+      --accent-2: #21d4fd;
+      --danger: #ff5d8f;
+      --border: rgba(255, 255, 255, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background: radial-gradient(circle at top left, rgba(124, 92, 255, 0.25), transparent 30%), linear-gradient(135deg, #060816 0%, #101c34 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .card {
+      width: min(720px, 100%);
+      padding: 32px;
+      border-radius: 24px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(124, 92, 255, 0.2);
+      color: var(--accent-2);
+      font-size: 0.9rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    h1, h2 {
+      margin: 0 0 12px;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .actions {
+      display: grid;
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .actions form { margin: 0; }
+
+    button {
+      width: 100%;
+      padding: 14px 18px;
+      border: none;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: white;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 10px 24px rgba(33, 212, 253, 0.2);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 28px rgba(124, 92, 255, 0.3);
+    }
+
+    .footnote {
+      margin-top: 20px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">Neo Dashboard</div>
+    <h1>Phonebook Application</h1>
+    <h2>Welcome to {{developer_name}}'s space</h2>
+    <p class="subtitle">Choose an action below to manage your contacts with a fast, modern experience.</p>
+
+    <div class="actions">
+      <form action="/add">
+        <button type="submit">Add Contact</button>
+      </form>
+      <form action="/update">
+        <button type="submit">Update Contact</button>
+      </form>
+      <form action="/delete">
+        <button type="submit">Delete Contact</button>
+      </form>
+    </div>
+
+    <p class="footnote"><i>This app is built in Python with Flask and connected directly to MySQL.</i></p>
+  </div>
+</body>
+</html>

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import tempfile
 import os
+import boto3
 import s3access
 
 app = Flask(__name__)
@@ -16,6 +17,21 @@ def make_client_from_form(form):
                                      region_name=region)
 
 
+def get_caller_identity_from_form(form):
+    """Return STS get_caller_identity() result (dict) using the same creds as the form."""
+    access = form.get('access_key') or None
+    secret = form.get('secret_key') or None
+    region = form.get('region') or None
+    try:
+        session = boto3.Session(aws_access_key_id=access,
+                                aws_secret_access_key=secret,
+                                region_name=region)
+        sts = session.client('sts')
+        return sts.get_caller_identity()
+    except Exception as e:
+        return {'Error': str(e)}
+
+
 @app.route('/', methods=['GET'])
 def index():
     return render_template('index.html', keys=None)
@@ -27,16 +43,20 @@ def list_objects():
     if not bucket:
         flash('Bucket is required', 'error')
         return redirect(url_for('index'))
+    identity = get_caller_identity_from_form(request.form)
     try:
         client = make_client_from_form(request.form)
         keys = s3access.list_objects(client, bucket)
     except Exception as e:
-        flash(f'List failed: {e}', 'error')
+        # surface caller identity to help debug permission issues
+        id_msg = identity.get('Arn') or identity.get('Error') or str(identity)
+        flash(f'List failed: {e} — caller: {id_msg}', 'error')
         keys = None
     return render_template('index.html', keys=keys, bucket=bucket,
                            access_key=request.form.get('access_key', ''),
                            secret_key=request.form.get('secret_key', ''),
-                           region=request.form.get('region', ''))
+                           region=request.form.get('region', ''),
+                           caller_identity=identity)
 
 
 @app.route('/upload', methods=['POST'])

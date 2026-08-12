@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>S3 Web UI</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 20px; }
+      .box { border: 1px solid #ddd; padding: 12px; margin-bottom: 12px; }
+      .key { font-family: monospace; }
+      .msg { padding: 8px; margin-bottom: 8px; }
+      .error { background:#fdd; }
+      .success { background:#dfd; }
+    </style>
+  </head>
+  <body>
+    <h2>S3 Web UI</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+          <div class="msg {{ 'error' if cat=='error' else 'success' }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="box">
+      <form method="post" action="/list">
+        <div>
+          <label>Access Key: <input name="access_key" value="{{ access_key|default('') }}" size="40"></label>
+        </div>
+        <div>
+          <label>Secret Key: <input name="secret_key" value="{{ secret_key|default('') }}" size="40"></label>
+        </div>
+        <div>
+          <label>Region: <input name="region" value="{{ region|default('') }}" size="10"></label>
+          <label>Bucket: <input name="bucket" value="{{ bucket|default('') }}" size="30"></label>
+          <button type="submit">List Objects</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="box">
+      <form method="post" action="/upload" enctype="multipart/form-data">
+        <input type="hidden" name="access_key" value="{{ access_key|default('') }}">
+        <input type="hidden" name="secret_key" value="{{ secret_key|default('') }}">
+        <input type="hidden" name="region" value="{{ region|default('') }}">
+        <input type="hidden" name="bucket" value="{{ bucket|default('') }}">
+        <label>File: <input type="file" name="file"></label>
+        <button type="submit">Upload</button>
+      </form>
+    </div>
+
+    <div class="box">
+      <h3>Objects</h3>
+      {% if keys %}
+        <ul>
+        {% for k in keys %}
+          <li><span class="key">{{ k }}</span>
+            [<a href="/presign?bucket={{ bucket }}&key={{ k|urlencode }}&access_key={{ access_key }}&secret_key={{ secret_key }}&region={{ region }}">Download</a>]
+          </li>
+        {% endfor %}
+        </ul>
+      {% else %}
+        <div>No objects to show.</div>
+      {% endif %}
+    </div>
+
+  </body>
+</html>

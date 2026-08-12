@@ -14,10 +14,11 @@ Install dependencies:
 python -m pip install -r requirements.txt
 ```
 
-Run the GUI:
+Run the Web UI (Flask):
 
 ```bash
-python s3_gui.py
+python -m pip install -r requirements.txt
+python s3_web.py
 ```
 
 Usage

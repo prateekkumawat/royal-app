@@ -16,6 +16,9 @@ SUMMARY OF TASKS
    Primary AWS Services: VPC, ALB, EC2, Auto Scaling, Route 53
    Target Skill Area: Infrastructure & Networking
 
+3. Automated Microservices CI/CD Pipeline on ECS
+   Primary AWS Services: ECR, ECS Fargate, CodePipeline, CodeBuild
+   Target Skill Area: DevOps & Containerization
 
 4. Secure Multi-Tier IaC Provisioning with Secrets
    Primary AWS Services: Terraform / CloudFormation, RDS, KMS, Secrets Manager
@@ -97,6 +100,30 @@ TASK 2: High-Availability & Dynamic Scaling Web App Hosting
   - Access the ALB DNS name and refresh to verify round-robin routing between instances across AZs.
   - Stress test CPU using stress-ng on an EC2 instance and observe ASG automatically spinning up additional instances.
   - Terminate one instance manually and verify ALB health checks detect it and ASG launches a replacement.
+
+
+TASK 3: Automated Microservices CI/CD Pipeline on ECS Fargate
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  A SaaS engineering team wants to eliminate manual server deployments. Every git commit pushed to the main branch should automatically trigger container build, vulnerability check, image push to registry, and zero-downtime rolling update on ECS Fargate.
+
+* AWS Services Involved:
+  Amazon ECR, AWS ECS Fargate, AWS CodePipeline, AWS CodeBuild, IAM, CloudWatch.
+
+* Architecture Flow:
+  Git Push -> AWS CodePipeline -> AWS CodeBuild (Build Docker & Push) -> Amazon ECR -> ECS Fargate Deployment (Rolling Update)
+
+* Key Implementation Steps:
+  1. Store a simple REST API (Node.js/Python/Go) with a Dockerfile in GitHub or AWS CodeCommit.
+  2. Create an Amazon ECR repository saas-api-repo.
+  3. Create a buildspec.yml file defining Docker login, image tagging (using commit hash), build, ECR push, and generation of imagedefinitions.json.
+  4. Set up an ECS Fargate Cluster, Task Definition, and Service behind an ALB with desired task count of 2.
+  5. Configure AWS CodePipeline with Source (GitHub/CodeCommit), Build (CodeBuild), and Deploy (ECS Fargate) stages.
+
+* Verification & Deliverables:
+  - Push a version update (e.g., v1 to v2 API response) to Git.
+  - Monitor pipeline execution through CodePipeline stages.
+  - Confirm ECS Fargate updates tasks seamlessly with zero drop in traffic via ALB.
 
 
 TASK 4: Secure Multi-Tier IaC Provisioning with Secrets & Encryption

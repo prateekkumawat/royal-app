@@ -1,0 +1,28 @@
+{
+  "name": "cash-management-system",
+  "version": "1.0.0",
+  "description": "Full-Stack Microservice-Based Cash Management System (CMS) with REST APIs and Glassmorphism Dashboard UI",
+  "main": "start-services.js",
+  "scripts": {
+    "start": "node start-services.js",
+    "start:gateway": "node services/gateway-service/index.js",
+    "start:auth": "node services/auth-service/index.js",
+    "start:account": "node services/account-service/index.js",
+    "start:transaction": "node services/transaction-service/index.js",
+    "start:analytics": "node services/analytics-service/index.js",
+    "start:reconciliation": "node services/reconciliation-service/index.js",
+    "test": "node test-microservices.js"
+  },
+  "dependencies": {},
+  "keywords": [
+    "cash-management",
+    "microservices",
+    "treasury",
+    "liquidity",
+    "forecasting",
+    "reconciliation",
+    "rest-api"
+  ],
+  "author": "Antigravity",
+  "license": "ISC"
+}

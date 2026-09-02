@@ -1,0 +1,288 @@
+===============================================================================
+10 INTERMEDIATE REAL-TIME AWS PRACTICAL TASKS
+===============================================================================
+
+This document contains 10 industry-aligned, real-time AWS practical tasks designed for intermediate cloud engineers, DevOps practitioners, and cloud architects. Each task mirrors real-world enterprise scenarios with architecture flow, key steps, deliverables, and verification criteria.
+
+-------------------------------------------------------------------------------
+SUMMARY OF TASKS
+-------------------------------------------------------------------------------
+
+1. Serverless Event-Driven Image Processing
+   Primary AWS Services: S3, Lambda, SQS, SNS, DynamoDB
+   Target Skill Area: Serverless & Event Architecture
+
+2. High-Availability Auto-Scaling VPC Web App
+   Primary AWS Services: VPC, ALB, EC2, Auto Scaling, Route 53
+   Target Skill Area: Infrastructure & Networking
+
+
+4. Secure Multi-Tier IaC Provisioning with Secrets
+   Primary AWS Services: Terraform / CloudFormation, RDS, KMS, Secrets Manager
+   Target Skill Area: Infrastructure as Code & Security
+
+5. Real-Time Log Analytics & Anomaly Alerting
+   Primary AWS Services: CloudWatch, Kinesis, Lambda, OpenSearch, SNS
+   Target Skill Area: Observability & Real-Time Data
+
+6. SaaS API Gateway with Cognito Auth & WAF
+   Primary AWS Services: API Gateway, Cognito, Lambda, WAF, DynamoDB
+   Target Skill Area: API Design & Security
+
+7. Cross-Region Automated Disaster Recovery
+   Primary AWS Services: AWS Backup, S3 CRR, Route 53 Health Checks
+   Target Skill Area: Business Continuity & DR
+
+8. Decoupled Microservices with EventBridge
+   Primary AWS Services: EventBridge, Lambda, SQS, DynamoDB, SNS
+   Target Skill Area: Event-Driven Architecture
+
+9. Zero-Downtime DB Migration & Read Scaling
+   Primary AWS Services: AWS DMS, Aurora RDS, ElastiCache Redis
+   Target Skill Area: Database Engineering
+
+10. Automated Governance & Cost Remediation Bot
+    Primary AWS Services: AWS Config, EventBridge, Lambda, Cost Explorer, SSM
+    Target Skill Area: FinOps & Cloud Governance
+
+-------------------------------------------------------------------------------
+DETAILED TASK SCENARIOS & IMPLEMENTATION STEPS
+-------------------------------------------------------------------------------
+
+TASK 1: Serverless Event-Driven Image Processing Pipeline
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  An e-commerce platform allows users to upload profile and product photos. Standardizing these images (creating thumbnails, extracting metadata, and notifying downstream analytics) must happen instantly upon upload without keeping servers running 24/7.
+
+* AWS Services Involved:
+  Amazon S3, AWS Lambda, Amazon SQS, Amazon SNS, Amazon DynamoDB, IAM.
+
+* Architecture Flow:
+  Client Upload -> S3 Bucket (Source) -> S3 Event Notification -> AWS Lambda (Processor) -> S3 Bucket (Thumbnails) & DynamoDB (Metadata) -> Amazon SNS/SQS (Notification)
+
+* Key Implementation Steps:
+  1. Create two S3 buckets: app-uploads-raw-bucket and app-uploads-resized-bucket.
+  2. Configure an S3 Event Notification on the raw bucket to trigger an AWS Lambda function on s3:ObjectCreated:*.
+  3. Develop a Python/Node.js Lambda function using Pillow or Sharp to resize uploaded images to 200x200 thumbnails.
+  4. Write image metadata (filename, original size, timestamp, thumbnail URL) to a DynamoDB table named ImageMetadata.
+  5. Publish an event message to an SNS Topic (subscribed to SQS) to notify downstream microservices.
+  6. Implement a Dead-Letter Queue (DLQ) on Lambda for corrupted/failed image files.
+
+* Verification & Deliverables:
+  - Upload a raw PNG/JPEG image to app-uploads-raw-bucket.
+  - Confirm thumbnail exists in app-uploads-resized-bucket.
+  - Confirm metadata entry in DynamoDB and notification message received in SQS.
+
+
+TASK 2: High-Availability & Dynamic Scaling Web App Hosting
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  A retail web app experiences traffic spikes during flash sales. The application must auto-scale to handle load without manual intervention, ensure zero downtime during instance failures, and reside in a secure multi-AZ network.
+
+* AWS Services Involved:
+  Amazon VPC, ALB (Application Load Balancer), EC2 Auto Scaling Group (ASG), Route 53, CloudWatch.
+
+* Architecture Flow:
+  User Request -> Route 53 -> Application Load Balancer (Public Subnets) -> Auto Scaling Group (Private Subnets across 2 AZs) -> NAT Gateway / VPC Endpoints
+
+* Key Implementation Steps:
+  1. Design a custom VPC across 2 Availability Zones with 2 Public Subnets and 2 Private Subnets.
+  2. Set up an Internet Gateway for Public subnets and a NAT Gateway in one Public subnet for private outbound traffic.
+  3. Create an Application Load Balancer (ALB) in public subnets with a health check endpoint /health.
+  4. Create an EC2 Launch Template with a user data script installing Apache/Nginx and serving a sample web page displaying the instance ID.
+  5. Configure an Auto Scaling Group in private subnets (Min: 2, Desired: 2, Max: 6 instances).
+  6. Add Target Tracking Scaling Policy based on Average CPU Utilization (> 60%).
+
+* Verification & Deliverables:
+  - Access the ALB DNS name and refresh to verify round-robin routing between instances across AZs.
+  - Stress test CPU using stress-ng on an EC2 instance and observe ASG automatically spinning up additional instances.
+  - Terminate one instance manually and verify ALB health checks detect it and ASG launches a replacement.
+
+
+TASK 4: Secure Multi-Tier IaC Provisioning with Secrets & Encryption
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  A financial organization requires infrastructure provisioning to be fully automated via Terraform or CloudFormation. Secrets must never be hardcoded, and databases must be strictly isolated and encrypted at rest.
+
+* AWS Services Involved:
+  Terraform / AWS CloudFormation, AWS Secrets Manager, AWS KMS, Amazon RDS PostgreSQL (Multi-AZ), VPC.
+
+* Architecture Flow:
+  IaC Execution -> KMS Key Creation -> Secrets Manager (Generate DB Creds) -> Isolated Subnet RDS Instance (Encrypted via KMS & Auth via Secrets Manager)
+
+* Key Implementation Steps:
+  1. Write Infrastructure as Code (Terraform or CloudFormation) to define a dedicated database VPC module.
+  2. Create a customer-managed KMS key for encryption.
+  3. Configure AWS Secrets Manager to generate a random 32-character database password dynamically during deployment.
+  4. Provision a Multi-AZ Amazon RDS PostgreSQL instance placed exclusively in Isolated DB Subnets (no internet access).
+  5. Reference the KMS key ARN for RDS storage encryption and Secrets Manager secret for DB master credentials.
+  6. Enable automatic 30-day secret rotation using the built-in AWS Lambda template for Secrets Manager.
+
+* Verification & Deliverables:
+  - Run terraform apply or deploy CloudFormation stack cleanly without hardcoded plain-text passwords.
+  - Verify RDS cluster encryption state using AWS CLI / Console.
+  - Test retrieving credentials securely via AWS CLI / SDK from an authorized EC2 instance in the VPC.
+
+
+TASK 5: Real-Time Log Analytics & Anomaly Alerting Pipeline
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  A Security Operations Center (SOC) needs real-time visibility into application logs to detect error spikes (5xx HTTP status codes or security exceptions) and alert engineers immediately.
+
+* AWS Services Involved:
+  Amazon CloudWatch Logs, Amazon Kinesis Data Streams, AWS Lambda, Amazon OpenSearch Service, Amazon SNS.
+
+* Architecture Flow:
+  App Logs -> CloudWatch Log Group -> Subscription Filter -> Kinesis Data Stream -> AWS Lambda (Parser & Indexer) -> Amazon OpenSearch & SNS Alert (On Error Threshold)
+
+* Key Implementation Steps:
+  1. Create a CloudWatch Log Group /aws/apps/production-api.
+  2. Set up an Amazon Kinesis Data Stream log-analytics-stream.
+  3. Create a CloudWatch Subscription Filter to stream logs containing "ERROR" or "HTTP 500" to Kinesis.
+  4. Deploy a Lambda function triggered by Kinesis batches to transform logs into JSON format and index them into an OpenSearch cluster.
+  5. Configure a CloudWatch Metric Filter and Alarm triggered when error logs exceed 10 occurrences in 5 minutes, routing notifications to an SNS Email/Slack topic.
+
+* Verification & Deliverables:
+  - Generate simulated application error logs using a script pushing log events to CloudWatch.
+  - Verify parsed log entries appear in OpenSearch dashboards in real-time.
+  - Verify SNS email notification triggers when threshold is breached.
+
+
+TASK 6: Enterprise API Gateway with Cognito Auth & AWS WAF Protection
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  A B2B SaaS platform exposes public APIs to external clients. The API layer must enforce user authentication, limit request rates per client API key, and block malicious traffic (SQL injection, XSS).
+
+* AWS Services Involved:
+  Amazon API Gateway (REST), Amazon Cognito User Pools, AWS WAF (Web Application Firewall), AWS Lambda, DynamoDB.
+
+* Architecture Flow:
+  Client Request -> AWS WAF (Rules Filter) -> API Gateway (Cognito Authorizer & Rate Limiter) -> AWS Lambda -> Amazon DynamoDB
+
+* Key Implementation Steps:
+  1. Create an Amazon Cognito User Pool with app client enabled for JWT token issuance.
+  2. Build a REST API in API Gateway connected to a backend AWS Lambda and DynamoDB setup.
+  3. Configure a Cognito User Pool Authorizer on API Gateway endpoints.
+  4. Create an API Gateway Usage Plan with rate limits (e.g., 50 requests/sec) and API keys.
+  5. Deploy AWS WAF Web ACL attached to API Gateway with Managed Rule Groups (AWSManagedRulesCommonRuleSet, AWSManagedRulesSQLiRuleSet).
+
+* Verification & Deliverables:
+  - Test invoking API endpoint without Auth header -> Expect HTTP 401 Unauthorized.
+  - Authenticate with Cognito, pass JWT bearer token in Authorization header -> Expect HTTP 200 OK.
+  - Execute SQL injection attempt (e.g., GET /users?id=' OR '1'='1') -> Expect HTTP 403 Forbidden by WAF.
+
+
+TASK 7: Automated Centralized Disaster Recovery & Backup System
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  A healthcare compliance auditor mandates automated multi-region backup replication with a recovery point objective (RPO) under 15 minutes and recovery time objective (RTO) under 1 hour.
+
+* AWS Services Involved:
+  AWS Backup, Amazon S3 Cross-Region Replication (CRR), AWS Route 53 (Failover Routing), EC2 / RDS.
+
+* Architecture Flow:
+  Primary Region (us-east-1) -> AWS Backup Plan -> Cross-Region Backup Copy -> Secondary Region (us-west-2) + Route 53 Health Check Failover
+
+* Key Implementation Steps:
+  1. Set up resources (EC2 instance and RDS PostgreSQL) in Primary Region (us-east-1).
+  2. Create a centralized Backup Plan in AWS Backup with daily/hourly snapshot schedules.
+  3. Configure Cross-Region Copy in AWS Backup to automatically replicate recovery points to Secondary Region (us-west-2).
+  4. Set up an S3 bucket in us-east-1 with Versioning and Cross-Region Replication (CRR) targeting an S3 bucket in us-west-2.
+  5. Configure Route 53 DNS Failover with primary and secondary endpoints tied to health checks.
+
+* Verification & Deliverables:
+  - Verify automated snapshots created in primary region are automatically copied to the secondary vault in us-west-2.
+  - Simulate primary region failover by failing Route 53 health check and verifying DNS points to secondary region environment.
+
+
+TASK 8: Decoupled Event-Driven Microservices Architecture with EventBridge
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  In an e-commerce system, when an order is placed, multiple downstream microservices (Inventory, Payment, Shipping, Customer Email) must react independently without direct service-to-service calls.
+
+* AWS Services Involved:
+  Amazon EventBridge, AWS Lambda, Amazon SQS, Amazon SNS, Amazon DynamoDB.
+
+* Architecture Flow:
+  Order Service -> EventBridge Custom Event Bus -> Rule 1 (Payment Lambda) & Rule 2 (Inventory SQS Queue) & Rule 3 (Notification SNS)
+
+* Key Implementation Steps:
+  1. Create a custom EventBridge Event Bus named order-events-bus.
+  2. Create an Order Placement Lambda function that publishes a JSON event payload (e.g., detail-type: "OrderPlaced") to order-events-bus.
+  3. Define EventBridge Rule 1: Matches "detail-type": ["OrderPlaced"] -> Triggers Payment Processing Lambda.
+  4. Define EventBridge Rule 2: Matches "detail-type": ["OrderPlaced"] -> Sends message payload to an SQS Queue for Inventory updates.
+  5. Define EventBridge Rule 3: Matches "detail-type": ["OrderPlaced"] -> Triggers SNS topic to dispatch customer confirmation email.
+
+* Verification & Deliverables:
+  - Send a sample OrderPlaced event payload to EventBridge using AWS CLI or SDK.
+  - Verify Payment Lambda executes successfully, Inventory SQS queue receives message, and SNS email is dispatched simultaneously.
+
+
+TASK 9: Zero-Downtime Database Migration & Read Replica Scaling
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  An existing application database on standalone EC2/RDS MySQL is suffering high read latency. The team needs to migrate the database with zero downtime to Amazon Aurora with auto-scaling Read Replicas and a Redis caching layer.
+
+* AWS Services Involved:
+  AWS Database Migration Service (DMS), Amazon Aurora MySQL / RDS, Amazon ElastiCache (Redis), EC2.
+
+* Architecture Flow:
+  Source DB -> AWS DMS (Full Load + CDC) -> Target Aurora MySQL Cluster (Writer + Auto-Scaling Read Replicas) -> ElastiCache Redis (Cache Layer)
+
+* Key Implementation Steps:
+  1. Create a source RDS MySQL instance populated with sample relational data.
+  2. Provision a target Amazon Aurora MySQL Cluster with 1 Writer and 1 Reader node.
+  3. Create an AWS DMS Replication Instance, Source Endpoint, and Target Endpoint.
+  4. Create a DMS Migration Task using "Full Load + Change Data Capture (CDC)" to sync live data continuously.
+  5. Provision an ElastiCache Redis cluster in the VPC to cache high-frequency read queries.
+  6. Update application database driver settings to send Write traffic to Aurora Endpoint and Read traffic to Aurora Reader / Redis Cache.
+
+* Verification & Deliverables:
+  - Perform inserts/updates on source DB and verify real-time CDC synchronization into target Aurora database via DMS task metrics.
+  - Validate application read performance improvement using Redis cache and Aurora Read Replica endpoint.
+
+
+TASK 10: Automated Governance, Security Compliance & FinOps Remediation Bot
+-------------------------------------------------------------------------------
+* Real-World Scenario:
+  Cloud governance teams need an automated bot to enforce security compliance (e.g., auto-remediating publicly accessible S3 buckets or unencrypted storage) and issue daily cost anomaly alerts.
+
+* AWS Services Involved:
+  AWS Config, Amazon EventBridge, AWS Lambda, AWS Systems Manager (SSM), AWS Cost Explorer API, Amazon SNS.
+
+* Architecture Flow:
+  Non-Compliant AWS Resource -> AWS Config Rule Detection -> EventBridge Rule -> AWS Lambda (Auto-Remediation Bot) -> SSM Automation / S3 Bucket Policy Update + Cost Explorer Anomaly SNS Report
+
+* Key Implementation Steps:
+  1. Enable AWS Config and turn on built-in managed rules: s3-bucket-public-read-prohibited and ec2-volume-inuse-check.
+  2. Create an EventBridge rule that detects AWS Config Compliance Change events for NON_COMPLIANT resources.
+  3. Write a Python (Boto3) Lambda function that:
+     - Removes public access block overrides if an S3 bucket becomes public.
+     - Takes a snapshot and deletes unattached EBS volumes older than 7 days.
+  4. Write a scheduled daily Lambda function (Cron trigger via EventBridge) querying AWS Cost Explorer API for cost anomalies (> 20% daily jump) and posting an alert summary to SNS/Slack.
+
+* Verification & Deliverables:
+  - Manually disable public block on a test S3 bucket.
+  - Observe AWS Config flag the resource as NON_COMPLIANT within minutes, triggering Lambda auto-remediation to re-enforce public block automatically.
+  - Run the Cost Explorer bot manually to verify cost summary output generated in SNS.
+
+-------------------------------------------------------------------------------
+RECOMMENDED EXECUTION SEQUENCE FOR LEARNERS
+-------------------------------------------------------------------------------
+
+Level 1: Networking & Core Compute
+  Task 2 (VPC Auto Scaling) -> Task 4 (IaC & Secrets)
+
+Level 2: Serverless & Events
+  Task 1 (Serverless Image Pipeline) -> Task 8 (EventBridge Microservices)
+
+Level 3: DevOps & API Security
+  Task 3 (ECS Fargate CI/CD) -> Task 6 (API Gateway, Cognito, WAF)
+
+Level 4: Databases, Analytics & Resiliency
+  Task 5 (Log Analytics & Kinesis) -> Task 9 (DMS & Aurora Scaling) -> Task 7 (Disaster Recovery)
+
+Level 5: FinOps & Governance
+  Task 10 (Governance & FinOps Remediation Bot)
+
+===============================================================================

@@ -1,0 +1,11 @@
+.git
+.gitignore
+node_modules
+npm-debug.log
+.env
+.env.local
+.DS_Store
+Thumbs.db
+*.md
+!README.md
+!README-DOCKER.md

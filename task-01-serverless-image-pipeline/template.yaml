@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Task 01 - Serverless Event-Driven Image Processing Pipeline
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 512
+    Runtime: python3.11
+
+Resources:
+  # S3 Buckets
+  RawImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-raw-images'
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST]
+            AllowedOrigins: ['*']
+
+  ResizedImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub '${AWS::StackName}-resized-images'
+
+  # DynamoDB Table
+  ImageMetadataTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: ImageMetadata
+      PrimaryKey:
+        Name: ImageId
+        Type: String
+
+  # SNS Topic for Downstream Notifications
+  NotificationTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: image-processed-topic
+
+  # SQS Queue Subscribed to SNS
+  NotificationQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: image-processed-queue
+
+  NotificationSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref NotificationTopic
+      Protocol: sqs
+      Endpoint: !GetAtt NotificationQueue.Arn
+
+  # Lambda Processing Function
+  ImageProcessingFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: src/
+      Handler: app.lambda_handler
+      Environment:
+        Variables:
+          RESIZED_BUCKET: !Ref ResizedImageBucket
+          METADATA_TABLE: !Ref ImageMetadataTable
+          SNS_TOPIC_ARN: !Ref NotificationTopic
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Sub '${AWS::StackName}-raw-images'
+        - S3CrudPolicy:
+            BucketName: !Sub '${AWS::StackName}-resized-images'
+        - DynamoDBCrudPolicy:
+            TableName: ImageMetadata
+        - SNSPublishMessagePolicy:
+            TopicName: image-processed-topic
+      Events:
+        FileUploadEvent:
+          Type: S3
+          Properties:
+            Bucket: !Ref RawImageBucket
+            Events: s3:ObjectCreated:*
+
+Outputs:
+  RawBucketName:
+    Value: !Ref RawImageBucket
+  ResizedBucketName:
+    Value: !Ref ResizedImageBucket
+  SNSTopicArn:
+    Value: !Ref NotificationTopic

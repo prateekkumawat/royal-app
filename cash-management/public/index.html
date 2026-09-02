@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexCash - Corporate Cash Management & Treasury System</title>
+  <meta name="description" content="Enterprise Full-Stack Microservices Cash Management System featuring real-time liquidity, multi-currency accounts, cash sweeps, dual-control approvals, forecasting, and bank reconciliation.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">
+          <i class="fa-solid fa-vault"></i>
+        </div>
+        <div class="brand-info">
+          <h2>ApexCash</h2>
+          <span>Treasury & CMS v1.0</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="dashboard">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Liquidity Overview</span>
+        </button>
+        <button class="nav-item" data-tab="accounts">
+          <i class="fa-solid fa-building-columns"></i>
+          <span>Accounts & Sweeps</span>
+        </button>
+        <button class="nav-item" data-tab="transactions">
+          <i class="fa-solid fa-money-bill-transfer"></i>
+          <span>Transactions & Approvals</span>
+          <span class="badge badge-warning" id="nav-pending-count">0</span>
+        </button>
+        <button class="nav-item" data-tab="forecasting">
+          <i class="fa-solid fa-arrow-trend-up"></i>
+          <span>Forecasting & Analytics</span>
+        </button>
+        <button class="nav-item" data-tab="reconciliation">
+          <i class="fa-solid fa-scale-balanced"></i>
+          <span>Bank Reconciliation</span>
+        </button>
+        <button class="nav-item" data-tab="audit">
+          <i class="fa-solid fa-shield-halved"></i>
+          <span>Audit & Compliance</span>
+        </button>
+        <button class="nav-item" data-tab="apiexplorer">
+          <i class="fa-solid fa-code"></i>
+          <span>API Gateway Explorer</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="service-health-card" id="health-card">
+          <div class="health-header">
+            <span class="status-dot healthy" id="system-status-dot"></span>
+            <span class="status-title" id="system-status-text">Microservices Healthy</span>
+          </div>
+          <small id="health-details">Gateway :5000 Active</small>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar Header -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <h1 id="page-title">Liquidity Overview</h1>
+          <span class="sub-text">Real-time enterprise cash positioning & microservice operations</span>
+        </div>
+
+        <div class="topbar-right">
+          <!-- Quick Persona Switcher -->
+          <div class="persona-selector">
+            <label><i class="fa-solid fa-user-shield"></i> Active Role:</label>
+            <select id="role-select">
+              <option value="admin">Admin (Sarah Connor)</option>
+              <option value="manager" selected>Treasury Manager (Michael Scott)</option>
+              <option value="accountant">Accountant (Angela Martin)</option>
+            </select>
+          </div>
+
+          <!-- Dark/Light Theme Toggle -->
+          <button class="theme-toggle-btn" id="theme-toggle" title="Toggle Light/Dark Theme">
+            <i class="fa-solid fa-moon"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="content-body">
+
+        <!-- TAB 1: LIQUIDITY OVERVIEW DASHBOARD -->
+        <section class="tab-pane active" id="tab-dashboard">
+          <div class="kpi-grid">
+            <div class="kpi-card glass">
+              <div class="kpi-icon icon-blue"><i class="fa-solid fa-sack-dollar"></i></div>
+              <div class="kpi-data">
+                <span class="kpi-label">Total Cash Position (USD Eq.)</span>
+                <h3 class="kpi-value" id="kpi-total-cash">$0.00</h3>
+                <span class="kpi-trend positive"><i class="fa-solid fa-arrow-up"></i> +4.2% vs last month</span>
+              </div>
+            </div>
+
+            <div class="kpi-card glass">
+              <div class="kpi-icon icon-emerald"><i class="fa-solid fa-clock-rotate-left"></i></div>
+              <div class="kpi-data">
+                <span class="kpi-label">Cash Conversion Cycle (CCC)</span>
+                <h3 class="kpi-value" id="kpi-ccc">15.3 Days</h3>
+                <span class="kpi-sub">DSO: 38d | DPO: 45d</span>
+              </div>
+            </div>
+
+            <div class="kpi-card glass">
+              <div class="kpi-icon icon-amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+              <div class="kpi-data">
+                <span class="kpi-label">Pending Dual Approvals</span>
+                <h3 class="kpi-value" id="kpi-pending-approvals">0</h3>
+                <span class="kpi-sub">High-Value Transfers (≥ $10k)</span>
+              </div>
+            </div>
+
+            <div class="kpi-card glass">
+              <div class="kpi-icon icon-purple"><i class="fa-solid fa-fire-burner"></i></div>
+              <div class="kpi-data">
+                <span class="kpi-label">Monthly Runway</span>
+                <h3 class="kpi-value" id="kpi-runway">41.6 Months</h3>
+                <span class="kpi-sub">Burn Rate: $420k/mo</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dashboard Charts Section -->
+          <div class="chart-row">
+            <div class="chart-card glass grid-2">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-area"></i> 30-Day Liquidity Forecast</h3>
+                <span class="badge badge-info">Predictive Engine</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="forecastChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card glass grid-1">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-pie-chart"></i> Currency Distribution</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="currencyChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions & Recent Activity -->
+          <div class="action-table-row">
+            <div class="quick-actions-card glass">
+              <h3><i class="fa-solid fa-bolt"></i> Quick Operations</h3>
+              <div class="action-btn-group">
+                <button class="btn btn-primary" id="btn-quick-new-txn"><i class="fa-solid fa-plus"></i> New Transfer</button>
+                <button class="btn btn-secondary" id="btn-quick-sweep"><i class="fa-solid fa-wand-magic-sparkles"></i> Run Cash Sweep</button>
+                <button class="btn btn-outline" id="btn-quick-reconcile"><i class="fa-solid fa-file-import"></i> Upload Bank Statement</button>
+              </div>
+            </div>
+
+            <div class="table-card glass">
+              <div class="table-header">
+                <h3><i class="fa-solid fa-list-check"></i> Recent Transactions Ledger</h3>
+                <button class="btn-text" id="view-all-txns">View All</button>
+              </div>
+              <div class="table-responsive">
+                <table class="data-table">
+                  <thead>
+                    <tr>
+                      <th>Ref No</th>
+                      <th>Type</th>
+                      <th>Amount</th>
+                      <th>Currency</th>
+                      <th>Status</th>
+                      <th>Initiator</th>
+                    </tr>
+                  </thead>
+                  <tbody id="recent-transactions-tbody">
+                    <!-- Dynamic Rows -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 2: ACCOUNTS & CASH SWEEPS -->
+        <section class="tab-pane" id="tab-accounts">
+          <div class="section-toolbar">
+            <div class="toolbar-info">
+              <h2>Multi-Currency Accounts & Sweep Rules</h2>
+              <p>Manage operating accounts, target balance sweeps, and FX liquidity</p>
+            </div>
+            <div class="toolbar-actions">
+              <button class="btn btn-secondary" id="btn-run-sweep"><i class="fa-solid fa-wand-magic-sparkles"></i> Execute Cash Sweep</button>
+              <button class="btn btn-primary" id="btn-add-account"><i class="fa-solid fa-plus"></i> Add Account</button>
+            </div>
+          </div>
+
+          <div class="account-cards-grid" id="accounts-cards-container">
+            <!-- Account Cards dynamically loaded -->
+          </div>
+        </section>
+
+        <!-- TAB 3: TRANSACTIONS & APPROVAL WORKFLOW -->
+        <section class="tab-pane" id="tab-transactions">
+          <div class="section-toolbar">
+            <div class="toolbar-info">
+              <h2>Transaction Engine & Dual-Control Approvals</h2>
+              <p>Transfers ≥ $10,000 automatically require Dual-Control Treasury Manager approval</p>
+            </div>
+            <div class="toolbar-actions">
+              <button class="btn btn-primary" id="btn-new-transaction"><i class="fa-solid fa-plus"></i> Initiate Transaction</button>
+            </div>
+          </div>
+
+          <!-- Pending Approvals Banner -->
+          <div class="approval-alert-banner glass" id="approval-banner">
+            <div class="banner-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="banner-text">
+              <h4>Dual-Control Approval Queue</h4>
+              <p id="approval-banner-text">You have pending high-value transfers awaiting authorization.</p>
+            </div>
+          </div>
+
+          <div class="table-card glass">
+            <div class="table-header">
+              <h3>All Transactions</h3>
+              <div class="table-filters">
+                <select id="filter-txn-status">
+                  <option value="">All Statuses</option>
+                  <option value="PENDING_APPROVAL">Pending Approval</option>
+                  <option value="COMPLETED">Completed</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Ref ID</th>
+                    <th>Date</th>
+                    <th>Type / Category</th>
+                    <th>Accounts</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Initiator / Approver</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="all-transactions-tbody">
+                  <!-- Loaded dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: FORECASTING & ANALYTICS -->
+        <section class="tab-pane" id="tab-forecasting">
+          <div class="section-toolbar">
+            <div class="toolbar-info">
+              <h2>Cash Flow Forecasting & Variance Analytics</h2>
+              <p>Predictive 30/60/90-day cash projections and Working Capital breakdown</p>
+            </div>
+            <div class="horizon-toggle">
+              <button class="btn-toggle active" data-days="30">30 Days</button>
+              <button class="btn-toggle" data-days="60">60 Days</button>
+              <button class="btn-toggle" data-days="90">90 Days</button>
+            </div>
+          </div>
+
+          <div class="chart-row">
+            <div class="chart-card glass grid-2">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-line"></i> Cash Position Trajectory</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="detailForecastChart"></canvas>
+              </div>
+            </div>
+
+            <div class="chart-card glass grid-1">
+              <div class="chart-header">
+                <h3><i class="fa-solid fa-chart-bar"></i> Inflow vs Outflow Categories</h3>
+              </div>
+              <div class="chart-container">
+                <canvas id="cashflowBreakdownChart"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Variance Analysis Table -->
+          <div class="table-card glass" style="margin-top: 1.5rem;">
+            <div class="table-header">
+              <h3><i class="fa-solid fa-code-compare"></i> Forecast vs Actual Variance Analysis</h3>
+              <span class="badge badge-success" id="variance-status-badge">Overall Status: Favorable (+2.3%)</span>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Period</th>
+                    <th>Forecast Inflow</th>
+                    <th>Actual Inflow</th>
+                    <th>Inflow Variance</th>
+                    <th>Forecast Outflow</th>
+                    <th>Actual Outflow</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="variance-tbody">
+                  <!-- Dynamic rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: BANK RECONCILIATION -->
+        <section class="tab-pane" id="tab-reconciliation">
+          <div class="section-toolbar">
+            <div class="toolbar-info">
+              <h2>Bank Statement Reconciliation</h2>
+              <p>Automated bank statement line matching engine against corporate ledger</p>
+            </div>
+            <div class="toolbar-actions">
+              <button class="btn btn-primary" id="btn-upload-statement-modal"><i class="fa-solid fa-file-arrow-up"></i> Simulate Statement Upload</button>
+            </div>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card glass">
+              <div class="kpi-icon icon-blue"><i class="fa-solid fa-receipt"></i></div>
+              <div class="kpi-data">
+                <span class="kpi-label">Reconciliation Rate</span>
+                <h3 class="kpi-value" id="reconcile-rate-pct">50.0%</h3>
+              </div>
+            </div>
+            <div class="kpi-card glass">
+              <div class="kpi-icon icon-emerald"><i class="fa-solid fa-circle-check"></i></div>
+              <div class="kpi-data">
+                <span class="kpi-label">Reconciled Items</span>
+                <h3 class="kpi-value" id="reconciled-count">2</h3>
+              </div>
+            </div>
+            <div class="kpi-card glass">
+              <div class="kpi-icon icon-amber"><i class="fa-solid fa-circle-xmark"></i></div>
+              <div class="kpi-data">
+                <span class="kpi-label">Unreconciled Queue</span>
+                <h3 class="kpi-value" id="unreconciled-count">2</h3>
+              </div>
+            </div>
+          </div>
+
+          <div class="table-card glass">
+            <div class="table-header">
+              <h3>Bank Statement Feed</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Bank Ref</th>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Matched Ledger Txn</th>
+                    <th>Confidence</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="reconciliation-tbody">
+                  <!-- Loaded dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 6: AUDIT LOGS -->
+        <section class="tab-pane" id="tab-audit">
+          <div class="section-toolbar">
+            <div class="toolbar-info">
+              <h2>System Audit & Compliance Logs</h2>
+              <p>Immutable event audit log across all microservices</p>
+            </div>
+          </div>
+
+          <div class="table-card glass">
+            <div class="table-header">
+              <h3>Audit Trail Timeline</h3>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Timestamp</th>
+                    <th>Service</th>
+                    <th>Action</th>
+                    <th>Actor</th>
+                    <th>Details</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-logs-tbody">
+                  <!-- Loaded dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 7: API EXPLORER & GATEWAY STATUS -->
+        <section class="tab-pane" id="tab-apiexplorer">
+          <div class="section-toolbar">
+            <div class="toolbar-info">
+              <h2>API Gateway Sandbox & Microservice Health</h2>
+              <p>Test live REST API microservice endpoints through Gateway (Port 5000)</p>
+            </div>
+          </div>
+
+          <div class="microservice-grid" id="microservice-status-cards">
+            <!-- Microservice Health Cards -->
+          </div>
+
+          <div class="api-sandbox-card glass" style="margin-top: 1.5rem;">
+            <h3><i class="fa-solid fa-terminal"></i> Interactive API Request Tester</h3>
+            <div class="sandbox-form">
+              <div class="form-row">
+                <select id="api-method" class="form-control" style="width: 120px;">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                </select>
+                <input type="text" id="api-endpoint" class="form-control" value="/api/v1/accounts/liquidity-summary" style="flex: 1;">
+                <button class="btn btn-primary" id="btn-send-api-test"><i class="fa-solid fa-paper-plane"></i> Send Request</button>
+              </div>
+
+              <div class="form-group" id="api-body-group" style="display: none; margin-top: 1rem;">
+                <label>JSON Request Body:</label>
+                <textarea id="api-body" class="form-control" rows="4">{}</textarea>
+              </div>
+
+              <div class="api-response-wrapper" style="margin-top: 1rem;">
+                <label>API Gateway Response:</label>
+                <pre class="json-code" id="api-response-output">Click "Send Request" to test endpoint...</pre>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL: INITIATE TRANSACTION -->
+  <div class="modal-overlay" id="txn-modal">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h3>Initiate Corporate Transaction</h3>
+        <button class="modal-close" id="close-txn-modal">&times;</button>
+      </div>
+      <form id="txn-form">
+        <div class="form-group">
+          <label>Transaction Type</label>
+          <select id="form-txn-type" class="form-control" required>
+            <option value="INTERNAL_TRANSFER">Internal Account Transfer</option>
+            <option value="OUTFLOW">Vendor Disbursement / Outflow</option>
+            <option value="INFLOW">Receivable Deposit / Inflow</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <input type="text" id="form-txn-category" class="form-control" placeholder="e.g. Payroll Funding, Vendor Payment" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Amount</label>
+            <input type="number" step="0.01" id="form-txn-amount" class="form-control" placeholder="15000.00" required>
+          </div>
+          <div class="form-group" style="width: 120px;">
+            <label>Currency</label>
+            <select id="form-txn-currency" class="form-control">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" id="form-txn-desc" class="form-control" placeholder="Payment notes...">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancel-txn-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Submit Transaction</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD ACCOUNT -->
+  <div class="modal-overlay" id="account-modal">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h3>Add Corporate Account</h3>
+        <button class="modal-close" id="close-account-modal">&times;</button>
+      </div>
+      <form id="account-form">
+        <div class="form-group">
+          <label>Account Name</label>
+          <input type="text" id="form-acc-name" class="form-control" placeholder="e.g. APAC Regional Reserve" required>
+        </div>
+        <div class="form-group">
+          <label>Bank Name</label>
+          <input type="text" id="form-acc-bank" class="form-control" placeholder="e.g. Citibank International" required>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Account Type</label>
+            <select id="form-acc-type" class="form-control">
+              <option value="Operating">Operating</option>
+              <option value="Investment">Investment</option>
+              <option value="Payroll">Payroll</option>
+              <option value="Sweep">Sweep</option>
+            </select>
+          </div>
+          <div class="form-group" style="width: 120px;">
+            <label>Currency</label>
+            <select id="form-acc-curr" class="form-control">
+              <option value="USD">USD</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+              <option value="JPY">JPY</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group flex-1">
+            <label>Initial Balance</label>
+            <input type="number" step="0.01" id="form-acc-balance" class="form-control" value="500000">
+          </div>
+          <div class="form-group flex-1">
+            <label>Target Balance (Auto-Sweep)</label>
+            <input type="number" step="0.01" id="form-acc-target" class="form-control" value="400000">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="cancel-account-modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create Account</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Main JavaScript App Logic -->
+  <script src="app.js"></script>
+</body>
+</html>

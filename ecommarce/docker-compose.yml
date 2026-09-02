@@ -1,0 +1,100 @@
+version: '3.8'
+
+services:
+  # MySQL Database Container
+  mysql:
+    image: mysql:8.0
+    container_name: ecomm_mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Auth Microservice (JWT Auth & User Profiles)
+  auth-service:
+    build:
+      context: ./backend/auth-service
+      dockerfile: Dockerfile
+    container_name: ecomm_auth_service
+    restart: always
+    environment:
+      PORT: 5001
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: auth_db
+      JWT_SECRET: super_secret_jwt_key_2026
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Product Catalog Microservice
+  product-service:
+    build:
+      context: ./backend/product-service
+      dockerfile: Dockerfile
+    container_name: ecomm_product_service
+    restart: always
+    environment:
+      PORT: 5002
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: catalog_db
+      JWT_SECRET: super_secret_jwt_key_2026
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Order & Checkout Microservice
+  order-service:
+    build:
+      context: ./backend/order-service
+      dockerfile: Dockerfile
+    container_name: ecomm_order_service
+    restart: always
+    environment:
+      PORT: 5003
+      DB_HOST: mysql
+      DB_USER: root
+      DB_PASSWORD: rootpassword
+      DB_NAME: order_db
+      JWT_SECRET: super_secret_jwt_key_2026
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  # Dedicated React Static Frontend Container (Internal ONLY)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ecomm_frontend
+    restart: always
+
+  # Nginx Gateway (Sole Exposed Entrypoint for Client Traffic)
+  api-gateway:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    container_name: ecomm_gateway
+    restart: always
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - frontend
+
+volumes:
+  mysql_data:

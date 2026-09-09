@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AWS Load Balancer - Instance & IP Inspector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="background-decor">
+    <div class="glow-sphere glow-1"></div>
+    <div class="glow-sphere glow-2"></div>
+    <div class="grid-overlay"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="main-header">
+      <div class="brand-badge">
+        <span class="aws-icon">⚡</span>
+        <span class="brand-title">AWS ALB TRAFFIC CENTER</span>
+      </div>
+      <h1 class="hero-title">AWS Load Balancer Responder Tracker</h1>
+      <p class="hero-subtitle">Real-time instance identification, client IP collection, and round-robin traffic routing inspector.</p>
+      
+      <div class="status-bar">
+        <div class="status-pill status-healthy" id="healthPill">
+          <span class="status-dot"></span>
+          <span id="healthText">Checking ALB Target Group Health...</span>
+        </div>
+        <div class="time-pill">
+          <span>🕒 Server Time: </span>
+          <span id="serverTimeVal">--:--:--</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Top Key Metrics Cards -->
+    <section class="metrics-grid">
+      <div class="metric-card highlight-card">
+        <div class="metric-icon">🖥️</div>
+        <div class="metric-info">
+          <span class="metric-label">Responding Instance</span>
+          <h3 class="metric-value" id="topInstanceId">Loading...</h3>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">🌐</div>
+        <div class="metric-info">
+          <span class="metric-label">Instance Private IP</span>
+          <h3 class="metric-value" id="topInstanceIp">0.0.0.0</h3>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">👤</div>
+        <div class="metric-info">
+          <span class="metric-label">Collected Client IP</span>
+          <h3 class="metric-value" id="topClientIp">0.0.0.0</h3>
+        </div>
+      </div>
+
+      <div class="metric-card">
+        <div class="metric-icon">📍</div>
+        <div class="metric-info">
+          <span class="metric-label">Availability Zone</span>
+          <h3 class="metric-value" id="topAz">us-east-1a</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Content Layout -->
+    <div class="dashboard-grid">
+      
+      <!-- Card 1: Server / Instance Details -->
+      <section class="glass-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-badge">SERVER NODE</span>
+            <h2>Active EC2 / Container Instance</h2>
+          </div>
+          <span class="pulse-tag" id="nodeTag">Node Active</span>
+        </div>
+
+        <div class="card-body">
+          <div class="node-hero">
+            <div class="node-avatar" id="nodeAvatar">
+              <span>EC2</span>
+            </div>
+            <div class="node-hero-text">
+              <span class="node-id" id="nodeInstanceId">i-xxxxxxxxxxxxxxxxx</span>
+              <span class="node-sub" id="nodeHostname">hostname.ec2.internal</span>
+            </div>
+          </div>
+
+          <div class="detail-list">
+            <div class="detail-item">
+              <span class="detail-label">Local Private IP</span>
+              <span class="detail-value code-font" id="detailPrivateIp">--</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Public IPv4</span>
+              <span class="detail-value code-font" id="detailPublicIp">--</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">AWS Region</span>
+              <span class="detail-value" id="detailRegion">--</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Availability Zone</span>
+              <span class="detail-value badge-az" id="detailAz">--</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Total Requests Handled</span>
+              <span class="detail-value highlight-number" id="detailRequestsCount">0</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Card 2: Client Connection & ALB Proxy Info -->
+      <section class="glass-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <span class="card-badge">CLIENT & PROXY</span>
+            <h2>Client IP & ALB Headers</h2>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <div class="client-ip-box">
+            <span class="ip-box-label">DETECTED CLIENT IP ADDRESS</span>
+            <div class="ip-display" id="clientIpDisplay">
+              <span class="ip-text">127.0.0.1</span>
+              <button class="btn-copy" id="copyClientIpBtn" title="Copy Client IP">📋 Copy</button>
+            </div>
+          </div>
+
+          <div class="detail-list">
+            <div class="detail-item">
+              <span class="detail-label">Protocol (X-Forwarded-Proto)</span>
+              <span class="detail-value badge-proto" id="detailProto">HTTP</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Port (X-Forwarded-Port)</span>
+              <span class="detail-value code-font" id="detailPort">80</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">ALB Hostname</span>
+              <span class="detail-value code-font text-ellipsis" id="detailAlbHost">--</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">AWS Trace ID</span>
+              <span class="detail-value code-font text-ellipsis" id="detailTraceId">--</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Proxy Chain (X-Forwarded-For)</span>
+              <span class="detail-value code-font text-ellipsis" id="detailProxyChain">--</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- Section 3: Interactive ALB Round-Robin Traffic Visualizer -->
+    <section class="glass-card full-width-card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-badge">LIVE TEST SUITE</span>
+          <h2>Load Balancer Traffic Distribution Visualizer</h2>
+        </div>
+        <div class="controls-group">
+          <button class="btn btn-primary" id="btnManualPing">⚡ Ping Now</button>
+          <button class="btn btn-secondary" id="btnAutoPollToggle">▶ Start Auto-Polling</button>
+          <button class="btn btn-outline" id="btnClearLog">🗑 Clear Log</button>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="poll-bar">
+          <div class="poll-status">
+            <span class="status-indicator" id="pollIndicator"></span>
+            <span id="pollStatusText">Auto-polling paused</span>
+          </div>
+          <div class="poll-interval">
+            <label for="pollSpeedSelect">Interval:</label>
+            <select id="pollSpeedSelect">
+              <option value="1000">1 second</option>
+              <option value="2000" selected>2 seconds</option>
+              <option value="5000">5 seconds</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Instance Distribution Breakdown Pills -->
+        <div class="distribution-section">
+          <h3>Detected Responding Instances (<span id="uniqueInstancesCount">0</span> Nodes)</h3>
+          <div class="instances-flex" id="instancesFlex">
+            <p class="empty-text">No traffic logged yet. Click "Ping Now" or "Start Auto-Polling" to observe load balancing across instances.</p>
+          </div>
+        </div>
+
+        <!-- Traffic History Log Stream -->
+        <div class="log-section">
+          <div class="log-header">
+            <span>Recent Request Stream</span>
+            <span class="log-count" id="logCountText">0 Requests Logged</span>
+          </div>
+          <div class="log-stream" id="logStream">
+            <!-- Dynamic request log entries -->
+          </div>
+        </div>
+
+        <!-- CPU Stress Test Trigger -->
+        <div class="stress-box">
+          <div class="stress-info">
+            <h4>🔥 Simulate CPU Load (ASG Target Tracking Test)</h4>
+            <p>Triggers a CPU burst on the current responding instance to test Auto-Scaling Group scale-out rules.</p>
+          </div>
+          <button class="btn btn-warning" id="btnStress">Simulate 3s CPU Load</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Section 4: Raw ALB Headers Inspector -->
+    <section class="glass-card full-width-card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-badge">RAW DATA</span>
+          <h2>HTTP Request Headers Inspector</h2>
+        </div>
+        <button class="btn btn-outline" id="btnToggleHeaders">Show Headers JSON</button>
+      </div>
+
+      <div class="card-body collapsible-body hidden" id="headersCollapsible">
+        <pre class="code-block"><code id="rawHeadersCode">// Click "Show Headers JSON" to inspect complete HTTP request headers</code></pre>
+      </div>
+    </section>
+
+    <footer class="main-footer">
+      <p>AWS Load Balancer IP Collector Web App • Built with Node.js, Express & Modern CSS</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

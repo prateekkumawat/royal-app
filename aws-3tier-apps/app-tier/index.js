@@ -22,13 +22,14 @@ app.get('/health',(req,res)=>{
 
 // ADD TRANSACTION
 app.post('/transaction', (req,res)=>{
-    var response = "";
     try{
         console.log(req.body);
         console.log(req.body.amount);
         console.log(req.body.desc);
-        var success = transactionService.addTransaction(req.body.amount,req.body.desc);
-        if (success = 200) res.json({ message: 'added transaction successfully'});
+        const amount = req.body.amount;
+        const desc = req.body.desc || req.body.description;
+        var success = transactionService.addTransaction(amount, desc);
+        if (success === 200) res.json({ message: 'added transaction successfully'});
     }catch (err){
         res.json({ message: 'something went wrong', error : err.message});
     }
@@ -64,31 +65,65 @@ app.delete('/transaction',(req,res)=>{
     }
 });
 
-//DELETE ONE TRANSACTION
-app.delete('/transaction/id', (req,res)=>{
+//DELETE ONE TRANSACTION BY ID PARAM OR BODY
+app.delete('/transaction/:id', (req,res)=>{
     try{
-        //probably need to do some kind of parameter checking
-        transactionService.deleteTransactionById(req.body.id, function(result){
+        const id = req.params.id || req.query.id || req.body.id;
+        transactionService.deleteTransactionById(id, function(result){
             res.statusCode = 200;
-            res.json({message: `transaction with id ${req.body.id} seemingly deleted`});
+            res.json({message: `transaction with id ${id} seemingly deleted`});
         })
     } catch (err){
         res.json({message:"error deleting transaction", error: err.message});
     }
 });
 
-//GET SINGLE TRANSACTION
-app.get('/transaction/id',(req,res)=>{
-    //also probably do some kind of parameter checking here
+app.delete('/transaction/id', (req,res)=>{
     try{
-        transactionService.findTransactionById(req.body.id,function(result){
+        const id = req.body.id || req.query.id;
+        transactionService.deleteTransactionById(id, function(result){
             res.statusCode = 200;
-            var id = result[0].id;
-            var amt = result[0].amount;
-            var desc= result[0].desc;
-            res.json({"id":id,"amount":amt,"desc":desc});
-        });
+            res.json({message: `transaction with id ${id} seemingly deleted`});
+        })
+    } catch (err){
+        res.json({message:"error deleting transaction", error: err.message});
+    }
+});
 
+//GET SINGLE TRANSACTION BY ID PARAM OR BODY
+app.get('/transaction/:id',(req,res)=>{
+    try{
+        const id = req.params.id || req.query.id || req.body.id;
+        transactionService.findTransactionById(id,function(result){
+            if (!result || result.length === 0) {
+                res.statusCode = 404;
+                return res.json({message:"transaction not found"});
+            }
+            res.statusCode = 200;
+            var transactionId = result[0].id;
+            var amt = result[0].amount;
+            var desc = result[0].description || result[0].desc;
+            res.json({"id":transactionId,"amount":amt,"desc":desc});
+        });
+    }catch(err){
+        res.json({message:"error retrieving transaction", error: err.message});
+    }
+});
+
+app.get('/transaction/id',(req,res)=>{
+    try{
+        const id = req.query.id || req.body.id;
+        transactionService.findTransactionById(id,function(result){
+            if (!result || result.length === 0) {
+                res.statusCode = 404;
+                return res.json({message:"transaction not found"});
+            }
+            res.statusCode = 200;
+            var transactionId = result[0].id;
+            var amt = result[0].amount;
+            var desc = result[0].description || result[0].desc;
+            res.json({"id":transactionId,"amount":amt,"desc":desc});
+        });
     }catch(err){
         res.json({message:"error retrieving transaction", error: err.message});
     }

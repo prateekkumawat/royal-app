@@ -63,7 +63,7 @@
            .then(response => response.json())
            .then(data => this.populateData())
 
-           this.setState({text_amt : "", text_desc:"",transaction:[]});
+           this.setState({text_amt : "", text_desc:"", transactions:[]});
 
         }
 

@@ -49,12 +49,30 @@ function deleteTransactionById(id, callback){
     con.query(mysql, function(err,result){
         if (err) throw err;
         console.log(`Deleting transactions with id ${id}`);
-        return(callback(result));
+        if (callback) return callback(result);
     }) 
 }
 
+function initDb() {
+    const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS \`transactions\` (
+            \`id\` INT AUTO_INCREMENT PRIMARY KEY,
+            \`amount\` VARCHAR(255),
+            \`description\` VARCHAR(255)
+        );
+    `;
+    con.query(createTableQuery, function(err, result) {
+        if (err) {
+            console.error("Error creating/verifying transactions table:", err.message);
+        } else {
+            console.log("Verified / created 'transactions' table successfully.");
+        }
+    });
+}
 
-module.exports = {addTransaction, getAllTransactions, deleteAllTransactions, findTransactionById, deleteTransactionById};
+initDb();
+
+module.exports = {addTransaction, getAllTransactions, deleteAllTransactions, findTransactionById, deleteTransactionById, initDb};
 
 
 
